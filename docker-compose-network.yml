@@ -1,0 +1,50 @@
+version: "3"
+
+services:
+  nginx-proxy:
+    image: "jwilder/nginx-proxy"
+    container_name: nginx-proxy
+    restart: always
+    security_opt:
+      - label:type:docker_t
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx_html:/usr/share/nginx/html
+      - nginx_dhparam:/etc/nginx/dhparam
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_certs:/etc/nginx/certs
+      - nginx_config:/etc/nginx
+      - nginx_data:/data/nginx/cache
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    labels:
+      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true"
+
+  nginx-proxy-letsencrypt:
+    image: "jrcs/letsencrypt-nginx-proxy-companion"
+    container_name: "nginx-proxy-letsencrypt"
+    environment:
+      DEFAULT_EMAIL: "onlyorson@outlook.com"
+    depends_on:
+      - "nginx-proxy"
+    volumes:
+      - nginx_certs:/etc/nginx/certs:rw
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme_data:/etc/acme.sh
+
+networks:
+  default:
+    external:
+      name: nginx-proxy
+
+volumes:
+  nginx_certs:
+  nginx_vhost:
+  nginx_html:
+  nginx_dhparam:
+  nginx_config:
+  nginx_data:
+  acme_data:

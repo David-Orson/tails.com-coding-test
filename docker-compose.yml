@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  tails-client:
+    image: index.docker.io/orsondc/tails-client:latest
+    container_name: "tails-client"
+    restart: always
+    expose:
+      - 80
+    environment:
+      VIRTUAL_HOST: davidorson.tech
+      LETSENCRYPT_HOST: davidorson.tech
+      MAPBOX_API_TOKEN: ${MAPBOX_API_TOKEN}
+
+  tails-api:
+    image: index.docker.io/orsondc/tails-api:latest
+    container_name: "tails-api"
+    restart: always
+    expose:
+      - 5000
+    environment:
+      VIRTUAL_HOST: davidorson.tech
+      LETSENCRYPT_HOST: davidorson.tech
+
+networks:
+  default:
+    external:
+      name: nginx-proxy

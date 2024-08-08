@@ -1,0 +1,26 @@
+FROM node:16.14.2-alpine AS build
+
+WORKDIR /usr/app
+RUN apk add --no-cache git
+
+COPY package.json ./
+RUN npm install --legacy-peer-deps
+
+COPY . .
+
+RUN npm run build
+
+FROM httpd:alpine
+EXPOSE 80
+RUN echo -e "<IfModule mod_rewrite.c>\n \
+  RewriteEngine On\n \
+  RewriteBase /\n \
+  RewriteRule ^index\.html$ - [L]\n \
+  RewriteCond %{REQUEST_FILENAME} !-f\n \
+  RewriteCond %{REQUEST_FILENAME} !-d\n \
+  RewriteRule . /index.html [L]\n \
+</IfModule>" > /usr/local/apache2/htdocs/.htaccess
+RUN sed -i 's/#LoadModule rewrite_module modules\/mod_rewrite.so/LoadModule rewrite_module modules\/mod_rewrite.so/g' /usr/local/apache2/conf/httpd.conf
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /usr/local/apache2/conf/httpd.conf
+
+COPY --from=build /usr/app/build /usr/local/apache2/htdocs/
